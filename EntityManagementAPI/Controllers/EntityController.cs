@@ -86,7 +86,7 @@ namespace EntityManagementAPI.Controllers
                     Id = "5",
                     Addresses = new List<Address>
                     {
-                        new Address { AddressLine = "222 Maple St", City = "Largetown", Country = "Canada" }
+                        new Address { AddressLine = "222 Maple St", City = "Largetown", Country = "Russia" }
                     },
                     Dates = new List<Date>
                     {
@@ -120,7 +120,9 @@ namespace EntityManagementAPI.Controllers
 
             };
 
-        // POST: api/demo*
+
+
+        // POST: api/create
         [HttpPost("create")]
         public async Task<ActionResult<Entity>> CreateEntity(Entity entity)
         {
@@ -133,11 +135,81 @@ namespace EntityManagementAPI.Controllers
         }
 
 
-        // GET api/entities
+
+        [HttpPost("create-Retry-and-Backof")]
+        // POST: api/entity/create
+        //[HttpPost("create")]
+        public async Task<ActionResult<Entity>> CreateEntity01(Entity entity)
+        {
+            if (entity == null)
+            {
+                return BadRequest();
+            }
+
+            int retryAttempts = 3;
+            TimeSpan initialDelay = TimeSpan.FromSeconds(1);
+            TimeSpan maxDelay = TimeSpan.FromSeconds(10);
+            TimeSpan currentDelay = initialDelay;
+            Random random = new Random();
+
+            for (int attempt = 1; attempt <= retryAttempts; attempt++)
+            {
+                try
+                {
+                    // Attempt to add entity
+                    _entities.Add(entity);
+                    return CreatedAtAction(nameof(GetEntity), new { id = entity.Id }, entity);
+                }
+                catch (Exception ex)
+                {
+                    // Log retry attempt
+                    LogRetryAttempt(attempt, ex.Message);
+
+                    // Wait before the next retry using exponential backoff
+                    await Task.Delay(currentDelay);
+
+                    // Increase delay for the next attempt
+                    currentDelay = TimeSpan.FromSeconds(Math.Min(currentDelay.TotalSeconds * 2, maxDelay.TotalSeconds));
+                }
+            }
+
+            // If all retry attempts fail, return error response
+            return StatusCode(StatusCodes.Status500InternalServerError, "Failed to create entity after multiple retries.");
+        }
+
+        private void LogRetryAttempt(int attempt, string errorMessage)
+        {
+            // Log retry attempt information
+            Console.WriteLine($"Retry Attempt {attempt}: {errorMessage}");
+        }
+
+
+
+        // GET api/entities/all
         [HttpGet("all")]
-        public async Task<ActionResult<IEnumerable<Entity>>> GetEntities()
+        public ActionResult<IEnumerable<Entity>> GetEntities()
         {
             return Ok(_entities);
+        }
+
+
+        // GET api/entities/all-Pagination-Sorting
+        [HttpGet("all-Pagination-Sorting")]
+        public async Task<ActionResult<IEnumerable<Entity>>> GetEntities(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 6,
+            [FromQuery] string sortBy = "Id",
+            [FromQuery] string sortOrder = "asc")
+        {
+            //BONUS Challenge-1
+            var sortedEntities = _entities.OrderByProperty(sortBy, sortOrder);
+            var paginatedEntities = sortedEntities.Skip((pageNumber - 1) * pageSize).Take(pageSize);
+            if (!paginatedEntities.Any())
+            {
+                return NotFound("Please check the value Input Parameter or execute by using Default Value");
+            }
+
+            return Ok(paginatedEntities);
         }
 
 
@@ -152,6 +224,7 @@ namespace EntityManagementAPI.Controllers
             }
             return Ok(entity);
         }
+
 
         // PUT: api/entity/{id}
         [HttpPut("{id}")]
@@ -173,6 +246,8 @@ namespace EntityManagementAPI.Controllers
             return NoContent();
         }
 
+
+
         // DELETE: api/entity/{id}
         [HttpDelete("{id}")]
         public IActionResult DeleteEntity(string id)
@@ -185,6 +260,8 @@ namespace EntityManagementAPI.Controllers
             _entities.Remove(entity);
             return NoContent();
         }
+
+
 
         // GET api/entities/search
         [HttpGet("search")]
@@ -200,6 +277,7 @@ namespace EntityManagementAPI.Controllers
 
             return Ok(results);
         }
+
 
 
         // GET api/entities/filter
@@ -235,5 +313,7 @@ namespace EntityManagementAPI.Controllers
 
             return Ok(results.ToList());
         }
+
+
     }
 }
