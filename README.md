@@ -34,15 +34,3 @@ To set up and run the EntityManagementAPI project locally, follow these steps:
 - **GET /api/entity/search:** Search for entities based on specified criteria.
 - **GET /api/entity/filter:** Filter entities based on gender, date range, and countries.
 
-## Contribution Guidelines
-
-If you'd like to contribute to the project, please follow these guidelines:
-
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature/my-feature`).
-3. Make your changes and commit them (`git commit -am 'Add new feature'`).
-4. Push your changes to the branch (`git push origin feature/my-feature`).
-5. Create a new pull request.
-
-
-
