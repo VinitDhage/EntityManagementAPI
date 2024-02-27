@@ -136,10 +136,9 @@ namespace EntityManagementAPI.Controllers
 
 
 
-        [HttpPost("create-Retry-and-Backof")]
-        // POST: api/entity/create
-        //[HttpPost("create")]
-        public async Task<ActionResult<Entity>> CreateEntity01(Entity entity)
+        // POST: api/entity/create-Retry-and-Backoff
+        [HttpPost("create-Retry-and-Backoff")]
+        public async Task<ActionResult<Entity>> CreateEntityRetryAndBackoff(Entity entity)
         {
             if (entity == null)
             {
